@@ -1,0 +1,1070 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Try It — Asynaptco Agent</title>
+<style>
+  :root {
+    --bg:      oklch(98.5% 0.003 260);
+    --surface: oklch(100% 0 0);
+    --fg:      oklch(18% 0.012 260);
+    --muted:   oklch(48% 0.014 260);
+    --border:  oklch(90% 0.005 260);
+    --accent:  oklch(52% 0.16 20);
+    --accent-dim: oklch(52% 0.16 20 / 0.06);
+    --accent-hover: oklch(48% 0.18 20);
+    --green:   oklch(58% 0.16 145);
+    --amber:   oklch(68% 0.14 80);
+    --blue:    oklch(55% 0.14 250);
+
+    --font-display: 'Inter', 'Helvetica Neue', -apple-system, system-ui, sans-serif;
+    --font-body:    -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-mono:    'JetBrains Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --shadow-sm: 0 1px 3px oklch(0% 0 0 / 0.04);
+    --shadow-md: 0 1px 4px oklch(0% 0 0 / 0.06), 0 2px 12px oklch(0% 0 0 / 0.04);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--fg);
+    height: 100vh;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Top Bar ── */
+  .topbar {
+    height: 44px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 14px;
+    background: oklch(100% 0 0 / 0.88);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .topbar-logo {
+    display: flex; align-items: center; gap: 7px;
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+  .topbar-logo-icon { width: 26px; height: auto; flex-shrink: 0; }
+  .topbar-logo .accent { color: var(--accent); }
+  .topbar-session { color: var(--muted); }
+  .topbar-actions { display: flex; align-items: center; gap: 8px; }
+  .topbar-btn {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 4px 10px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-radius: 6px;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .topbar-btn:hover { color: var(--fg); border-color: var(--fg); }
+  .topbar-btn.primary { border-color: var(--accent); color: var(--accent); }
+  .topbar-btn.primary:hover { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+
+  /* ── Layout ── */
+  .layout {
+    display: flex;
+    height: calc(100vh - 44px);
+  }
+
+  /* ── Left Sidebar ── */
+  .sidebar-left {
+    width: 240px;
+    flex-shrink: 0;
+    background: oklch(99.5% 0.001 260);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    overflow-y: auto;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .sidebar-section {
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px;
+    cursor: pointer;
+    user-select: none;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 600;
+    transition: color 0.15s;
+  }
+  .sidebar-section-header:hover { color: var(--fg); }
+  .sidebar-section-header .arrow {
+    font-size: 9px;
+    transition: transform 0.2s;
+    opacity: 0.5;
+  }
+  .sidebar-section.collapsed .sidebar-section-body { display: none; }
+  .sidebar-section.collapsed .arrow { transform: rotate(-90deg); }
+  .sidebar-section-body { padding: 0 0 6px 0; }
+  .sidebar-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 14px;
+    cursor: pointer;
+    color: var(--muted);
+    transition: color 0.1s, background 0.1s;
+    position: relative;
+    font-size: 11px;
+    border-radius: 0;
+  }
+  .sidebar-item:hover { color: var(--fg); background: var(--accent-dim); }
+  .sidebar-item.active { color: var(--fg); background: var(--accent-dim); }
+  .sidebar-item .si-icon { font-size: 11px; width: 16px; text-align: center; flex-shrink: 0; }
+  .sidebar-item .si-badge {
+    margin-left: auto;
+    font-size: 9px;
+    background: oklch(18% 0.012 260 / 0.08);
+    color: var(--muted);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  .sidebar-item .si-badge.green { background: oklch(58% 0.16 145 / 0.12); color: var(--green); }
+
+  /* ── Main Content ── */
+  .main-content {
+    flex: 1;
+    display: flex; flex-direction: column;
+    min-width: 0;
+    background: var(--bg);
+  }
+
+  /* ── Chat Area ── */
+  .chat-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex; flex-direction: column;
+    gap: 4px;
+  }
+  .chat-empty {
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    text-align: center;
+    gap: 8px;
+  }
+  .chat-empty .big { font-size: 28px; opacity: 0.35; }
+
+  /* ── Message Styles ── */
+  .msg {
+    padding: 10px 14px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.7;
+    border-left: 2px solid transparent;
+    white-space: pre-wrap;
+    word-break: break-word;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  }
+  .msg.user {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: var(--accent-dim);
+  }
+  .msg.think { color: var(--muted); font-style: italic; }
+  .msg.think::before { content: '… '; }
+  .msg.assistant { color: var(--fg); }
+  .msg.tool { color: var(--blue); font-size: 11px; }
+  .msg.tool::before { content: '[tool] '; }
+  .msg.result { color: var(--green); font-size: 11px; }
+  .msg.result::before { content: '[ok]   '; }
+  .msg.error { color: var(--accent); font-size: 11px; }
+  .msg.error::before { content: '[err]  '; }
+
+  /* ── Code Block ── */
+  .code-block {
+    margin: 0;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--accent);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.7;
+    overflow-x: auto;
+    position: relative;
+    white-space: pre;
+  }
+  .code-block .lang-tag {
+    position: absolute; top: 8px; right: 12px;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    opacity: 0.6;
+  }
+  .code-block .kw { color: var(--accent); font-weight: 500; }
+  .code-block .str { color: oklch(52% 0.14 145); }
+  .code-block .cmt { color: var(--muted); font-style: italic; opacity: 0.7; }
+
+  /* ── Workflow Timeline ── */
+  .workflow-step {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 7px 14px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    border-left: 2px solid var(--border);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    margin: 0;
+  }
+  .workflow-step .ws-icon { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+  .workflow-step .ws-label { color: var(--fg); }
+  .workflow-step .ws-dur { color: var(--muted); margin-left: auto; font-size: 10px; }
+  .workflow-step.done .ws-icon { color: var(--green); }
+  .workflow-step.running .ws-icon { color: var(--accent); animation: pulse 1s infinite; }
+  .workflow-step.pending .ws-icon { color: var(--muted); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+  /* ── Execution Window ── */
+  .exec-window {
+    margin: 0;
+    background: oklch(16% 0.015 260);
+    color: oklch(90% 0.008 260);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .exec-window-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 14px;
+    background: oklch(12% 0.018 260);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: oklch(60% 0.012 260);
+    border-bottom: 1px solid oklch(100% 0 0 / 0.08);
+  }
+  .exec-window-body {
+    padding: 12px 14px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  .exec-window-body .out { color: oklch(88% 0.008 260); }
+  .exec-window-body .err { color: oklch(65% 0.18 25); }
+  .exec-window-body .green { color: oklch(72% 0.14 145); }
+
+  /* ── Input Area ── */
+  .input-area {
+    flex-shrink: 0;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    padding: 14px 20px;
+  }
+  .input-row {
+    display: flex; align-items: flex-end; gap: 10px;
+    background: oklch(99% 0.002 260);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 8px 12px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .input-row:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+  .input-textarea {
+    flex: 1;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    border: none;
+    background: transparent;
+    color: var(--fg);
+    resize: none;
+    outline: none;
+    min-height: 24px;
+    max-height: 120px;
+    line-height: 1.6;
+  }
+  .input-textarea::placeholder { color: var(--muted); }
+  .input-actions { display: flex; gap: 6px; align-items: flex-end; }
+  .input-btn {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 5px 10px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    border-radius: 6px;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .input-btn:hover { color: var(--fg); border-color: var(--fg); }
+  .input-btn.send {
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .input-btn.send:hover { background: var(--accent); color: var(--surface); }
+  .file-upload-label {
+    cursor: pointer;
+    display: inline-flex; align-items: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 5px 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-radius: 6px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .file-upload-label:hover { color: var(--fg); border-color: var(--fg); }
+  .file-upload-input { display: none; }
+
+  /* ── Right Sidebar ── */
+  .sidebar-right {
+    width: 260px;
+    flex-shrink: 0;
+    background: oklch(99.5% 0.001 260);
+    border-left: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    overflow-y: auto;
+  }
+  .sr-section {
+    border-bottom: 1px solid var(--border);
+  }
+  .sr-section-header {
+    padding: 12px 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 600;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .sr-section-header .count { color: var(--accent); font-weight: 600; }
+  .file-list { list-style: none; }
+  .file-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid oklch(18% 0.012 260 / 0.04);
+    font-size: 11px;
+    transition: background 0.1s;
+  }
+  .file-item:hover { background: var(--accent-dim); }
+  .file-item .fi-icon { font-size: 12px; width: 16px; text-align: center; flex-shrink: 0; }
+  .file-item .fi-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-item .fi-size { color: var(--muted); font-size: 10px; }
+  .file-item .fi-status { font-size: 9px; font-weight: 600; }
+  .file-item .fi-status.modified { color: var(--amber); }
+  .file-item .fi-status.new { color: var(--green); }
+
+  /* ── Telegram Section ── */
+  .telegram-box {
+    margin: 10px 14px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+  }
+  .telegram-box .tg-status {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 11px;
+    margin-bottom: 10px;
+  }
+  .tg-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+  .tg-dot.connected { background: var(--green); }
+  .tg-btn {
+    width: 100%;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 6px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-radius: 6px;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .tg-btn:hover { color: var(--fg); border-color: var(--fg); }
+  .tg-btn.connected { border-color: var(--green); color: var(--green); background: oklch(58% 0.16 145 / 0.06); }
+
+  /* ── Mobile Sidebar Toggles ── */
+  .sidebar-toggle {
+    display: none;
+    position: fixed; bottom: 20px; z-index: 200;
+    width: 40px; height: 40px;
+    font-family: var(--font-mono);
+    font-size: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--fg);
+    cursor: pointer;
+    align-items: center; justify-content: center;
+    border-radius: 50%;
+    box-shadow: var(--shadow-md);
+  }
+  .sidebar-toggle.left { left: 16px; }
+  .sidebar-toggle.right { right: 16px; }
+
+  .sidebar-overlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 150;
+    background: oklch(0% 0 0 / 0.25);
+    backdrop-filter: blur(2px);
+  }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: var(--fg);
+    color: var(--surface);
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    z-index: 300;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+    box-shadow: var(--shadow-md);
+  }
+  .toast.show { opacity: 1; }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .sidebar-left, .sidebar-right {
+      position: fixed; top: 44px; bottom: 0; z-index: 160;
+      overflow-y: auto;
+      transition: transform 0.25s cubic-bezier(0.22, 0.61, 0.36, 1);
+      box-shadow: var(--shadow-md);
+    }
+    .sidebar-left { left: 0; transform: translateX(-100%); }
+    .sidebar-right { right: 0; transform: translateX(100%); }
+    .sidebar-left.open { transform: translateX(0); }
+    .sidebar-right.open { transform: translateX(0); }
+    .sidebar-overlay.active { display: block; }
+    .sidebar-toggle { display: flex; }
+    .main-content { flex: 1; }
+  }
+
+  @media (max-width: 500px) {
+    .topbar { padding: 0 10px; }
+    .topbar-session { display: none; }
+    .input-area { padding: 10px 12px; }
+    .input-row { flex-direction: column; gap: 8px; }
+    .input-actions { width: 100%; justify-content: flex-end; }
+    .chat-area { padding: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ TOP BAR ═══ -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" style="text-decoration:none;color:inherit;">
+      <span class="topbar-logo">
+        <svg class="topbar-logo-icon" viewBox="0 0 56 22" fill="none" aria-hidden="true">
+          <rect x="0" y="2" width="12" height="18" rx="4" fill="currentColor"/>
+          <rect x="13" y="10" width="12" height="2" rx="1" fill="currentColor"/>
+          <circle cx="28" cy="11" r="2.2" fill="var(--accent)"/>
+          <rect x="31" y="10" width="12" height="2" rx="1" fill="currentColor"/>
+          <rect x="44" y="2" width="12" height="18" rx="4" fill="currentColor"/>
+        </svg>
+        ASYNAPT<span class="accent">//</span>CO
+      </span>
+    </a>
+    <span class="topbar-session">session_0x7f3a · agent v0.4</span>
+  </div>
+  <div class="topbar-actions">
+    <button class="topbar-btn" onclick="clearChat()" title="New session">+ New</button>
+    <button class="topbar-btn" onclick="exportSession()">Export</button>
+    <a href="home.html" class="topbar-btn" style="text-decoration:none;">Home</a>
+  </div>
+</div>
+
+<!-- ═══ LAYOUT ═══ -->
+<div class="layout">
+
+  <!-- ── LEFT SIDEBAR ── -->
+  <aside class="sidebar-left" id="sidebarLeft">
+    <div class="sidebar-section">
+      <div class="sidebar-section-header" onclick="toggleSection(this)">
+        History <span class="arrow">▾</span>
+      </div>
+      <div class="sidebar-section-body">
+        <div class="sidebar-item active">
+          <span class="si-icon">●</span> security-audit · auth module
+        </div>
+        <div class="sidebar-item">
+          <span class="si-icon">○</span> refactor-payment-flow
+        </div>
+        <div class="sidebar-item">
+          <span class="si-icon">○</span> generate-api-docs
+        </div>
+        <div class="sidebar-item">
+          <span class="si-icon">○</span> migrate-to-typescript
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-header" onclick="toggleSection(this)">
+        Scheduled Tasks <span class="arrow">▾</span>
+      </div>
+      <div class="sidebar-section-body">
+        <div class="sidebar-item">
+          <span class="si-icon">◷</span> daily-dependency-scan
+          <span class="si-badge green">06:00</span>
+        </div>
+        <div class="sidebar-item">
+          <span class="si-icon">◷</span> weekly-code-review
+          <span class="si-badge">Mon 09:00</span>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-header" onclick="toggleSection(this)">
+        Skills <span class="arrow">▾</span>
+      </div>
+      <div class="sidebar-section-body">
+        <div class="sidebar-item"><span class="si-icon">◆</span> code-review</div>
+        <div class="sidebar-item"><span class="si-icon">◆</span> security-scan</div>
+        <div class="sidebar-item"><span class="si-icon">◆</span> refactor</div>
+        <div class="sidebar-item"><span class="si-icon">◆</span> test-generator</div>
+        <div class="sidebar-item"><span class="si-icon">◆</span> doc-writer</div>
+        <div class="sidebar-item" style="color:var(--muted);cursor:pointer;" onclick="toast('Skill marketplace coming soon')">
+          <span class="si-icon">+</span> Add skill…
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-header" onclick="toggleSection(this)">
+        MCP Servers <span class="arrow">▾</span>
+      </div>
+      <div class="sidebar-section-body">
+        <div class="sidebar-item"><span class="si-icon">⬡</span> filesystem
+          <span class="si-badge green">on</span>
+        </div>
+        <div class="sidebar-item"><span class="si-icon">⬡</span> github
+          <span class="si-badge green">on</span>
+        </div>
+        <div class="sidebar-item"><span class="si-icon">⬡</span> playwright
+          <span class="si-badge green">on</span>
+        </div>
+        <div class="sidebar-item"><span class="si-icon">⬡</span> postgres
+          <span class="si-badge">off</span>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-header" onclick="toggleSection(this)">
+        Model Config <span class="arrow">▾</span>
+      </div>
+      <div class="sidebar-section-body">
+        <div class="sidebar-item"><span class="si-icon">◈</span> claude-sonnet-4
+          <span class="si-badge green">active</span>
+        </div>
+        <div class="sidebar-item"><span class="si-icon">◈</span> gpt-5-mini</div>
+        <div class="sidebar-item"><span class="si-icon">◈</span> gemini-2.5-pro</div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-header" onclick="toggleSection(this)">
+        Settings <span class="arrow">▾</span>
+      </div>
+      <div class="sidebar-section-body">
+        <div class="sidebar-item"><span class="si-icon">⚙</span> General</div>
+        <div class="sidebar-item"><span class="si-icon">⚙</span> API Keys</div>
+        <div class="sidebar-item"><span class="si-icon">⚙</span> Notifications</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── MAIN CONTENT ── -->
+  <main class="main-content">
+    <div class="chat-area" id="chatArea">
+      <div class="chat-empty" id="chatEmpty">
+        <div class="big">◆</div>
+        <div>Asynaptco Agent — ready.</div>
+        <div style="color:var(--muted);font-size:11px;">Type a task or drop a file to begin.</div>
+      </div>
+    </div>
+
+    <!-- Input -->
+    <div class="input-area">
+      <div class="input-row">
+        <textarea class="input-textarea" id="chatInput" placeholder="ask asynaptco…" rows="1"
+          onkeydown="handleInputKey(event)"></textarea>
+        <div class="input-actions">
+          <label class="file-upload-label">
+            + File
+            <input type="file" class="file-upload-input" id="fileUpload" onchange="handleFileUpload(event)" multiple>
+          </label>
+          <button class="input-btn send" onclick="sendMessage()">Send</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ── RIGHT SIDEBAR ── -->
+  <aside class="sidebar-right" id="sidebarRight">
+    <div class="sr-section">
+      <div class="sr-section-header">Workspace Files <span class="count" id="fileCount">6</span></div>
+      <ul class="file-list" id="fileList">
+        <li class="file-item">
+          <span class="fi-icon">📄</span>
+          <span class="fi-name">auth/jwt-handler.ts</span>
+          <span class="fi-size">3.2K</span>
+        </li>
+        <li class="file-item">
+          <span class="fi-icon">📄</span>
+          <span class="fi-name">auth/oauth-provider.ts</span>
+          <span class="fi-size">5.8K</span>
+          <span class="fi-status modified">M</span>
+        </li>
+        <li class="file-item">
+          <span class="fi-icon">📄</span>
+          <span class="fi-name">payments/stripe-webhook.ts</span>
+          <span class="fi-size">2.1K</span>
+        </li>
+        <li class="file-item">
+          <span class="fi-icon">📁</span>
+          <span class="fi-name">src/middleware/</span>
+          <span class="fi-size">4 files</span>
+        </li>
+        <li class="file-item">
+          <span class="fi-icon">📄</span>
+          <span class="fi-name">package.json</span>
+          <span class="fi-size">1.4K</span>
+        </li>
+        <li class="file-item">
+          <span class="fi-icon">📄</span>
+          <span class="fi-name">tsconfig.json</span>
+          <span class="fi-size">0.6K</span>
+        </li>
+      </ul>
+    </div>
+    <div class="sr-section">
+      <div class="sr-section-header">Recent Outputs</div>
+      <ul class="file-list">
+        <li class="file-item">
+          <span class="fi-icon">📊</span>
+          <span class="fi-name">security-report.json</span>
+          <span class="fi-size">12K</span>
+          <span class="fi-status new">new</span>
+        </li>
+        <li class="file-item">
+          <span class="fi-icon">📊</span>
+          <span class="fi-name">dependency-audit.md</span>
+          <span class="fi-size">8K</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Telegram Integration -->
+    <div class="sr-section">
+      <div class="sr-section-header">Telegram Bot</div>
+      <div class="telegram-box">
+        <div class="tg-status">
+          <span class="tg-dot" id="tgDot"></span>
+          <span id="tgStatusText">Disconnected</span>
+        </div>
+        <button class="tg-btn" id="tgBtn" onclick="toggleTelegram()">Connect Bot</button>
+        <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5;">
+          Chat with Asynaptco via Telegram.<br>
+          Send tasks, receive results,<br>
+          manage sessions on the go.
+        </div>
+        <input type="text" id="tgTokenInput" placeholder="@bot_token"
+          style="display:none;width:100%;margin-top:10px;font-family:var(--font-mono);font-size:11px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--fg);outline:none;">
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- ── MOBILE TOGGLES ── -->
+<button class="sidebar-toggle left" id="toggleLeft" onclick="toggleMobileSidebar('left')">☰</button>
+<button class="sidebar-toggle right" id="toggleRight" onclick="toggleMobileSidebar('right')">☷</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebars()"></div>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══ SCRIPTS ═══ -->
+<script>
+  // ── Sidebar section toggle ──
+  function toggleSection(header) {
+    header.parentElement.classList.toggle('collapsed');
+  }
+
+  // ── Mobile sidebar ──
+  function toggleMobileSidebar(side) {
+    const sidebar = document.getElementById(side === 'left' ? 'sidebarLeft' : 'sidebarRight');
+    const overlay = document.getElementById('sidebarOverlay');
+    const isOpen = sidebar.classList.contains('open');
+    closeMobileSidebars();
+    if (!isOpen) {
+      sidebar.classList.add('open');
+      overlay.classList.add('active');
+    }
+  }
+  function closeMobileSidebars() {
+    document.getElementById('sidebarLeft').classList.remove('open');
+    document.getElementById('sidebarRight').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('active');
+  }
+
+  // ── Toast ──
+  let toastTimer;
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function() { el.classList.remove('show'); }, 2000);
+  }
+
+  // ── Chat ──
+  const chatArea = document.getElementById('chatArea');
+  const chatEmpty = document.getElementById('chatEmpty');
+  const chatInput = document.getElementById('chatInput');
+
+  // ── Session management ──
+  let sessionId = localStorage.getItem('asynaptco_session');
+  let isStreaming = false;
+
+  async function ensureSession() {
+    if (!sessionId) {
+      const res = await fetch('/api/agent/sessions', { method: 'POST' });
+      const data = await res.json();
+      sessionId = data.session_id;
+      localStorage.setItem('asynaptco_session', sessionId);
+      document.getElementById('sessionId').textContent = '#' + sessionId;
+    }
+    return sessionId;
+  }
+
+  function resetSession() {
+    localStorage.removeItem('asynaptco_session');
+    sessionId = null;
+    document.getElementById('sessionId').textContent = 'new…';
+  }
+
+  function hideEmpty() {
+    if (chatEmpty) chatEmpty.style.display = 'none';
+  }
+
+  function addMsg(type, text) {
+    hideEmpty();
+    const div = document.createElement('div');
+    div.className = 'msg ' + type;
+    div.textContent = text;
+    chatArea.appendChild(div);
+    chatArea.scrollTop = chatArea.scrollHeight;
+    return div;
+  }
+
+  function addCodeBlock(code, lang) {
+    hideEmpty();
+    const wrapper = document.createElement('div');
+    wrapper.style.position = 'relative';
+    const pre = document.createElement('div');
+    pre.className = 'code-block';
+    pre.innerHTML = highlightCode(code);
+    if (lang) {
+      const tag = document.createElement('span');
+      tag.className = 'lang-tag';
+      tag.textContent = lang;
+      pre.appendChild(tag);
+    }
+    wrapper.appendChild(pre);
+    chatArea.appendChild(wrapper);
+    chatArea.scrollTop = chatArea.scrollHeight;
+  }
+
+  function addWorkflowSteps(steps) {
+    hideEmpty();
+    steps.forEach(function(s) {
+      const div = document.createElement('div');
+      div.className = 'workflow-step ' + s.status;
+      div.innerHTML = '<span class="ws-icon">' + (s.status === 'done' ? '✓' : s.status === 'running' ? '⟳' : '○') + '</span>' +
+        '<span class="ws-label">' + s.label + '</span>' +
+        (s.duration ? '<span class="ws-dur">' + s.duration + '</span>' : '');
+      chatArea.appendChild(div);
+    });
+    chatArea.scrollTop = chatArea.scrollHeight;
+  }
+
+  function addExecWindow(output, exitCode) {
+    hideEmpty();
+    const wrapper = document.createElement('div');
+    wrapper.className = 'exec-window';
+    wrapper.innerHTML =
+      '<div class="exec-window-header">' +
+        '<span>exec · bash</span>' +
+        '<span>exit: ' + (exitCode || 0) + '</span>' +
+      '</div>' +
+      '<div class="exec-window-body">' + escapeHtml(output) + '</div>';
+    chatArea.appendChild(wrapper);
+    chatArea.scrollTop = chatArea.scrollHeight;
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function highlightCode(code) {
+    return code
+      .replace(/(\/\/.*)/g, '<span class="cmt">$1</span>')
+      .replace(/\b(const|let|var|function|return|if|else|for|while|import|export|from|async|await|class|new|try|catch|throw|typeof|instanceof)\b/g, '<span class="kw">$1</span>')
+      .replace(/(['"`])(?:(?!\1).)*?\1/g, '<span class="str">$&</span>');
+  }
+
+  function handleInputKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  function sendMessage() {
+    const text = chatInput.value.trim();
+    if (!text || isStreaming) return;
+    addMsg('user', text);
+    chatInput.value = '';
+    chatInput.style.height = 'auto';
+
+    realAgentResponse(text);
+  }
+
+  async function realAgentResponse(prompt) {
+    var sid = await ensureSession();
+    var assistantMsg = null;
+    var fullText = '';
+    var currentToolName = '';
+    var steps = [];
+    isStreaming = true;
+    chatInput.disabled = true;
+
+    try {
+      var res = await fetch('/api/agent/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: prompt, session_id: sid }),
+      });
+
+      var reader = res.body.getReader();
+      var decoder = new TextDecoder();
+      var buffer = '';
+
+      while (true) {
+        var { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        // Parse SSE events from buffer
+        var lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+        var eventType = '';
+
+        for (var i = 0; i < lines.length; i++) {
+          var line = lines[i];
+          if (line.startsWith('event: ')) {
+            eventType = line.slice(7);
+          } else if (line.startsWith('data: ') && eventType) {
+            var data = line.slice(6);
+            handleSSEEvent(eventType, data);
+            eventType = '';
+          }
+        }
+      }
+    } catch (err) {
+      addMsg('think', 'Error: ' + err.message);
+    } finally {
+      if (assistantMsg && fullText) {
+        assistantMsg.textContent = fullText;
+      }
+      isStreaming = false;
+      chatInput.disabled = false;
+      chatInput.focus();
+    }
+
+    function handleSSEEvent(type, data) {
+      switch (type) {
+        case 'text':
+          fullText += data;
+          if (!assistantMsg) {
+            assistantMsg = addMsg('assistant', data);
+          } else {
+            assistantMsg.textContent = fullText;
+          }
+          break;
+
+        case 'tool_call':
+          try {
+            var tc = JSON.parse(data);
+            currentToolName = tc.name;
+            addMsg('tool', '[tool:' + tc.name + '] ' + JSON.stringify(tc.input).slice(0, 200));
+            steps.push({ status: 'running', label: tc.name, duration: '…' });
+            addWorkflowSteps(steps);
+          } catch(e) {}
+          break;
+
+        case 'tool_result':
+          try {
+            var tr = JSON.parse(data);
+            if (currentToolName === 'bash' && tr.result) {
+              addExecWindow(tr.result, 0);
+            }
+            // Mark last step as done
+            if (steps.length > 0) {
+              steps[steps.length - 1].status = 'done';
+              steps[steps.length - 1].duration = '✓';
+            }
+            currentToolName = '';
+          } catch(e) {}
+          break;
+
+        case 'done':
+          try {
+            var done = JSON.parse(data);
+            if (done.usage) {
+              addMsg('think', 'Tokens: ' + done.usage.input_tokens + ' in / ' + done.usage.output_tokens + ' out');
+            }
+          } catch(e) {}
+          break;
+
+        case 'error':
+          addMsg('think', '⚠ ' + data);
+          break;
+      }
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+  }
+
+  function clearChat() {
+    chatArea.innerHTML = '';
+    var empty = document.createElement('div');
+    empty.className = 'chat-empty';
+    empty.id = 'chatEmpty';
+    empty.innerHTML = '<div class="big">◆</div><div>New session started.</div><div style="color:var(--muted);font-size:11px;">Type a task or drop a file to begin.</div>';
+    chatArea.appendChild(empty);
+    resetSession();
+    toast('New session created');
+  }
+
+  function exportSession() {
+    toast('Session exported → sessions/0x7f3a.json');
+  }
+
+  // ── File Upload ──
+  function handleFileUpload(e) {
+    const files = e.target.files;
+    if (!files.length) return;
+    hideEmpty();
+    const names = Array.from(files).map(function(f) { return f.name; }).join(', ');
+    addMsg('tool', 'uploaded: ' + names + ' (' + files.length + ' file' + (files.length>1?'s':'') + ')');
+
+    const fileList = document.getElementById('fileList');
+    Array.from(files).forEach(function(f) {
+      const li = document.createElement('li');
+      li.className = 'file-item';
+      const kb = (f.size / 1024).toFixed(1);
+      li.innerHTML = '<span class="fi-icon">📄</span><span class="fi-name">' + f.name + '</span><span class="fi-size">' + kb + 'K</span><span class="fi-status new">new</span>';
+      fileList.appendChild(li);
+    });
+    updateFileCount();
+    e.target.value = '';
+  }
+
+  function updateFileCount() {
+    const count = document.getElementById('fileList').querySelectorAll('.file-item').length;
+    document.getElementById('fileCount').textContent = count;
+  }
+
+  // ── Telegram ──
+  let tgConnected = false;
+  function toggleTelegram() {
+    const btn = document.getElementById('tgBtn');
+    const dot = document.getElementById('tgDot');
+    const status = document.getElementById('tgStatusText');
+    const input = document.getElementById('tgTokenInput');
+
+    if (tgConnected) {
+      tgConnected = false;
+      btn.textContent = 'Connect Bot';
+      btn.classList.remove('connected');
+      dot.classList.remove('connected');
+      status.textContent = 'Disconnected';
+      input.style.display = 'none';
+      input.value = '';
+      toast('Telegram bot disconnected');
+    } else {
+      if (input.style.display === 'none') {
+        input.style.display = 'block';
+        input.focus();
+        btn.textContent = 'Confirm';
+        return;
+      }
+      const token = input.value.trim();
+      if (!token) { toast('Enter a bot token'); return; }
+      tgConnected = true;
+      btn.textContent = 'Disconnect';
+      btn.classList.add('connected');
+      dot.classList.add('connected');
+      status.textContent = 'Connected · @' + token;
+      input.style.display = 'none';
+      toast('Telegram bot connected');
+    }
+  }
+
+  // Auto-resize textarea
+  chatInput.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+  });
+
+  // Init on page load
+  ensureSession();
+</script>
+
+</body>
+</html>

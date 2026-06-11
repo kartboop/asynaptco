@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asynaptco — Asynchronous Agent Collaboration</title>
+<style>
+  :root {
+    --bg:      oklch(98.5% 0.003 260);
+    --surface: oklch(100% 0 0);
+    --fg:      oklch(18% 0.012 260);
+    --muted:   oklch(48% 0.014 260);
+    --border:  oklch(90% 0.005 260);
+    --accent:  oklch(52% 0.16 20);
+    --accent-dim: oklch(52% 0.16 20 / 0.06);
+    --accent-hover: oklch(48% 0.18 20);
+    --green:   oklch(58% 0.16 145);
+
+    --font-display: 'Inter', 'Helvetica Neue', -apple-system, system-ui, sans-serif;
+    --font-body:    -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-mono:    'JetBrains Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --shadow-card: 0 1px 3px oklch(0% 0 0 / 0.06), 0 1px 8px oklch(0% 0 0 / 0.04);
+    --shadow-card-hover: 0 2px 6px oklch(0% 0 0 / 0.08), 0 4px 16px oklch(0% 0 0 / 0.06);
+
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 32px;
+    --space-xl: 64px;
+    --space-2xl: 96px;
+    --space-3xl: 120px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ── Navigation ── */
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: oklch(100% 0 0 / 0.85);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px var(--space-lg);
+  }
+  .nav-logo {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+  }
+  .nav-logo-icon { width: 36px; height: auto; flex-shrink: 0; }
+  .nav-logo .accent { color: var(--accent); }
+  .nav-links { display: flex; gap: var(--space-lg); align-items: center; }
+  .nav-link {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-decoration: none;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 4px 0;
+    border-bottom: 1.5px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+    font-weight: 500;
+  }
+  .nav-link:hover { color: var(--fg); }
+  .nav-link.try {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  /* ── Hero ── */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: var(--space-3xl) var(--space-lg) var(--space-xl);
+    text-align: center;
+  }
+  .hero-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: var(--space-md);
+    font-weight: 550;
+  }
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(48px, 8vw, 88px);
+    font-weight: 650;
+    letter-spacing: -0.03em;
+    line-height: 0.95;
+    max-width: 10ch;
+  }
+  .hero-subtitle {
+    font-family: var(--font-mono);
+    font-size: clamp(14px, 1.6vw, 17px);
+    color: var(--muted);
+    max-width: 50ch;
+    margin-top: var(--space-lg);
+    line-height: 1.7;
+    font-weight: 450;
+  }
+
+  /* ── Demo Box ── */
+  .demo-box {
+    margin-top: var(--space-xl);
+    width: 100%;
+    max-width: 720px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+  }
+  .demo-box-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+    background: oklch(99% 0.002 260);
+  }
+  .demo-box-header .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border); }
+  .demo-box-header .dot.red { background: var(--accent); }
+  .demo-box-body {
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.8;
+    min-height: 280px;
+    max-height: 420px;
+    overflow-y: auto;
+  }
+  .demo-line {
+    padding: 6px 16px;
+    border-bottom: 1px solid oklch(18% 0.012 260 / 0.04);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .demo-line.prompt { color: var(--accent); }
+  .demo-line.prompt::before { content: '> '; }
+  .demo-line.think { color: var(--muted); font-style: italic; }
+  .demo-line.think::before { content: '… '; }
+  .demo-line.output { color: var(--fg); }
+  .demo-line.code { color: var(--fg); padding-left: 28px; }
+  .demo-box-footer {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: oklch(99% 0.002 260);
+  }
+  .demo-input {
+    flex: 1;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    border: none;
+    background: transparent;
+    color: var(--fg);
+    outline: none;
+  }
+  .demo-input::placeholder { color: var(--muted); }
+  .demo-cursor {
+    display: inline-block;
+    width: 7px; height: 13px;
+    background: var(--accent);
+    animation: blink 1s step-end infinite;
+    vertical-align: text-bottom;
+    border-radius: 1px;
+  }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  /* ── Sections ── */
+  .section {
+    padding: var(--space-3xl) var(--space-lg);
+  }
+  .section-inner {
+    max-width: 880px;
+    margin: 0 auto;
+  }
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: var(--space-md);
+    font-weight: 550;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(28px, 4vw, 42px);
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    margin-bottom: var(--space-lg);
+  }
+  .section-body {
+    font-size: 16px;
+    color: var(--muted);
+    line-height: 1.8;
+    max-width: 64ch;
+  }
+
+  /* ── Feature Grid ── */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin-top: var(--space-xl);
+  }
+  .feature-card {
+    padding: var(--space-lg);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+    transition: box-shadow 0.2s, transform 0.15s;
+  }
+  .feature-card:hover { box-shadow: var(--shadow-card-hover); transform: translateY(-1px); }
+  .feature-card .fc-icon {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    margin-bottom: var(--space-sm);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .feature-card h3 {
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    margin-bottom: var(--space-sm);
+  }
+  .feature-card p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* ── CTAs ── */
+  .cta-section {
+    padding: var(--space-3xl) var(--space-lg);
+    text-align: center;
+  }
+  .cta-section .section-inner {
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .cta-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: var(--space-lg);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 550;
+    text-decoration: none;
+    color: var(--surface);
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 12px 28px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .cta-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
+
+  /* ── Footer ── */
+  .footer {
+    padding: var(--space-2xl) var(--space-lg) var(--space-xl);
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .footer-inner {
+    max-width: 880px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-xl);
+  }
+  .footer-left p { margin-bottom: var(--space-xs); }
+  .footer-right { display: flex; gap: var(--space-lg); align-items: center; }
+  .footer-link {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    transition: color 0.15s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .footer-link:hover { color: var(--fg); }
+  .footer-bottom {
+    max-width: 880px;
+    margin: var(--space-lg) auto 0;
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .nav { padding: 10px var(--space-md); }
+    .nav-links { gap: var(--space-md); }
+    .hero { padding: var(--space-2xl) var(--space-md) var(--space-xl); }
+    .section { padding: var(--space-2xl) var(--space-md); }
+    .demo-box { max-width: 100%; }
+    .demo-box-body { max-height: 320px; }
+    .feature-grid { grid-template-columns: 1fr; }
+    .footer-inner { flex-direction: column; gap: var(--space-md); }
+  }
+
+  @media (max-width: 480px) {
+    .hero-eyebrow { font-size: 10px; }
+    .hero-title { font-size: clamp(36px, 12vw, 52px); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ NAVIGATION ═══ -->
+<nav class="nav">
+  <a href="index.html" class="nav-logo" style="text-decoration:none;color:inherit;">
+    <svg class="nav-logo-icon" viewBox="0 0 56 22" fill="none" aria-hidden="true">
+      <rect x="0" y="2" width="12" height="18" rx="4" fill="currentColor"/>
+      <rect x="13" y="10" width="12" height="2" rx="1" fill="currentColor"/>
+      <circle cx="28" cy="11" r="2.2" fill="var(--accent)"/>
+      <rect x="31" y="10" width="12" height="2" rx="1" fill="currentColor"/>
+      <rect x="44" y="2" width="12" height="18" rx="4" fill="currentColor"/>
+    </svg>
+    ASYNAPT<span class="accent">//</span>CO
+  </a>
+  <div class="nav-links">
+    <a href="index.html" class="nav-link">Home</a>
+    <a href="try-it.html" class="nav-link try">Try It →</a>
+  </div>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="hero-eyebrow">Agent Collaboration Protocol</div>
+  <h1 class="hero-title">async<br>agents.<br>one synapse.</h1>
+  <p class="hero-subtitle">
+    Asynaptco connects autonomous agents through asynchronous collaboration.
+    Delegate tasks, review outputs, and orchestrate workflows —
+    without watching paint dry.
+  </p>
+
+  <!-- Demo Box -->
+  <div class="demo-box">
+    <div class="demo-box-header">
+      <span class="dot red"></span><span class="dot"></span><span class="dot"></span>
+      &nbsp;asynaptco agent — session_0x7f3a
+    </div>
+    <div class="demo-box-body" id="demoBody">
+      <div class="demo-line prompt">analyze repo structure and find security patterns</div>
+      <div class="demo-line think">scanning directory tree… 142 files in 18 modules</div>
+      <div class="demo-line think">identified 3 auth entry points, 2 token exchange flows</div>
+      <div class="demo-line output">Found 2 medium-severity patterns. Running deep scan on auth module…</div>
+      <div class="demo-line code"><span style="color:var(--accent)">const</span> <span style="color:var(--fg)">vuln</span> = <span style="color:var(--fg)">scanner.audit</span>(<span style="color:var(--muted)">'auth/jwt-handler.ts'</span>)</div>
+      <div class="demo-line code"><span style="color:var(--fg)">  .filter</span>(<span style="color:var(--fg)">p</span> => <span style="color:var(--fg)">p.severity</span> >= <span style="color:var(--accent)">MEDIUM</span>)</div>
+      <div class="demo-line code"><span style="color:var(--fg)">  .map</span>(<span style="color:var(--fg)">p</span> => <span style="color:var(--fg)">p.report</span>)</div>
+      <div class="demo-line output">✓ scan complete. 1 confirmed issue. report saved → audit/2026-06-11.md</div>
+    </div>
+    <div class="demo-box-footer">
+      <span style="color:var(--accent)">></span>
+      <input class="demo-input" id="demoInput" placeholder="ask anything…" autofocus>
+      <span class="demo-cursor"></span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ABOUT ═══ -->
+<section class="section" id="about">
+  <div class="section-inner">
+    <div class="section-label">// What</div>
+    <h2 class="section-title">Agents don't need<br>synchronous hand-holding.</h2>
+    <div class="section-body">
+      <p>Asynaptco is an asynchronous agent runtime. You post a task — our agents
+      pick it up, reason through it, execute tool calls, and deliver results. You review
+      when it suits you. No polling. No tab-watching. No timeout anxiety.</p>
+      <p style="margin-top:var(--space-md)">Built for developers who want agentic power without the chat-bubble
+      performance. Trigger workflows from CLI, Telegram, or the web dashboard.
+      Each agent session is versioned, auditable, and forkable.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FEATURES ═══ -->
+<section class="section" id="features">
+  <div class="section-inner">
+    <div class="section-label">// How</div>
+    <h2 class="section-title">Primitives, not<br>promises.</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="fc-icon">[async]</div>
+        <h3>Deferred Execution</h3>
+        <p>Fire a task and close the tab. Agents run in background workers. Get notified when results land — Telegram, webhook, or email.</p>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">[tools]</div>
+        <h3>Full Toolchain Access</h3>
+        <p>File system, shell, browser, API calls. Agents ship with MCP servers, custom skills, and sandboxed runtimes out of the box.</p>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">[audit]</div>
+        <h3>Auditable Sessions</h3>
+        <p>Every thought, tool call, and code change is logged. Roll back to any checkpoint. Share session traces with your team.</p>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">[multi]</div>
+        <h3>Multi-Agent Pipelines</h3>
+        <p>Chain agents: code review → fix → test → deploy. Each step runs when its dependency completes. No orchestration YAML required.</p>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">[sync]</div>
+        <h3>Synaptic State</h3>
+        <p>Agents share a persistent memory graph. Context doesn't evaporate between sessions. Your project knowledge compounds.</p>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">[bring]</div>
+        <h3>Bring Your Model</h3>
+        <p>OpenAI, Anthropic, Gemini, or self-hosted. Configure per-agent model selection, temperature, and system prompts in one place.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CTA ═══ -->
+<section class="cta-section" id="try">
+  <div class="section-inner">
+    <div class="section-label">// Try</div>
+    <h2 class="section-title">Ready to go async?</h2>
+    <a href="try-it.html" class="cta-btn">Open Agent Workspace →</a>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-left">
+      <p><strong>Asynaptco Inc.</strong></p>
+      <p>Asynchronous agent collaboration infrastructure.</p>
+      <p>© 2026 Asynaptco. All rights reserved.</p>
+    </div>
+    <div class="footer-right">
+      <a href="https://github.com/kartboop" class="footer-link" target="_blank" rel="noopener"><svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="16" viewBox="0 0 24 24" width="16" aria-hidden="true"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"></path></svg> GitHub</a>
+      <a href="https://x.com/Tsing967" class="footer-link" target="_blank" rel="noopener"><svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="14" viewBox="0 0 24 24" width="14" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg> X</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>build: 2026.06.11-0x7f3a · asynaptco agent runtime v0.4</span>
+  </div>
+</footer>
+
+<script>
+  // Demo box interactive typing simulation
+  const demoInput = document.getElementById('demoInput');
+  const demoBody = document.getElementById('demoBody');
+
+  const responses = [
+    { type: 'think', text: 'parsing request… routing to agent cluster us-east-2' },
+    { type: 'think', text: 'loaded 3 skills: code-review, security-scan, refactor' },
+    { type: 'output', text: 'Running security scan on current workspace:' },
+    { type: 'code', text: '$ asynaptco scan --severity medium --format json' },
+    { type: 'output', text: '✓ 0 critical · 1 medium · 4 low · 12 info' },
+    { type: 'output', text: 'Report: /sessions/0x7f3a/reports/security-2026-06-11.json' },
+  ];
+
+  demoInput.addEventListener('keydown', function(e) {
+    if (e.key !== 'Enter' || !demoInput.value.trim()) return;
+    const prompt = demoInput.value.trim();
+    demoInput.value = '';
+
+    const promptLine = document.createElement('div');
+    promptLine.className = 'demo-line prompt';
+    promptLine.textContent = prompt;
+    demoBody.appendChild(promptLine);
+
+    let delay = 400;
+    responses.forEach(function(r, i) {
+      setTimeout(function() {
+        const line = document.createElement('div');
+        line.className = 'demo-line ' + r.type;
+        line.innerHTML = r.text;
+        demoBody.appendChild(line);
+        demoBody.scrollTop = demoBody.scrollHeight;
+      }, delay + i * 350);
+    });
+
+    demoBody.scrollTop = demoBody.scrollHeight;
+  });
+</script>
+
+</body>
+</html>
