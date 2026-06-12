@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Try It — Asynaptco Agent</title>
+<script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
 <style>
   :root {
     --bg:      oklch(98.5% 0.003 260);
@@ -451,6 +452,109 @@
     backdrop-filter: blur(2px);
   }
 
+  .msg.assistant {
+    white-space: normal;
+    font-family: var(--font-body);
+    font-size: 13px;
+    line-height: 1.65;
+  }
+  .msg.assistant p { margin-bottom: 0.55em; }
+  .msg.assistant p:last-child { margin-bottom: 0; }
+  .msg.assistant ul, .msg.assistant ol { margin: 0.3em 0 0.55em 1.4em; }
+  .msg.assistant li { margin-bottom: 0.2em; }
+  .msg.assistant h1, .msg.assistant h2, .msg.assistant h3, .msg.assistant h4 {
+    font-weight: 700; letter-spacing: -0.01em; margin: 0.85em 0 0.3em;
+  }
+  .msg.assistant h1 { font-size: 15px; }
+  .msg.assistant h2 { font-size: 14px; }
+  .msg.assistant h3, .msg.assistant h4 { font-size: 13px; }
+  .msg.assistant code {
+    font-family: var(--font-mono); background: oklch(18% 0.012 260 / 0.07);
+    padding: 1px 5px; border-radius: 4px; font-size: 11.5px;
+  }
+  .msg.assistant pre {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 2px solid var(--accent); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: 10px 14px; overflow-x: auto; margin: 0.6em 0;
+  }
+  .msg.assistant pre code { background: none; padding: 0; font-size: 12px; }
+  .msg.assistant blockquote {
+    border-left: 3px solid var(--border); padding-left: 12px;
+    color: var(--muted); margin: 0.5em 0;
+  }
+  .msg.assistant a { color: var(--accent); text-decoration: underline; }
+  .msg.assistant table { border-collapse: collapse; width: 100%; margin: 0.6em 0; font-size: 12px; }
+  .msg.assistant th, .msg.assistant td { border: 1px solid var(--border); padding: 5px 10px; }
+  .msg.assistant th { background: var(--accent-dim); font-weight: 600; }
+  .msg.assistant hr { border: none; border-top: 1px solid var(--border); margin: 0.8em 0; }
+
+  /* ── Tool calls panel ── */
+  .tool-panel {
+    border-left: 2px solid var(--blue);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    overflow: hidden;
+  }
+  .tool-panel > summary {
+    cursor: pointer; user-select: none; list-style: none;
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px;
+    color: var(--blue); font-size: 11px; font-weight: 500;
+    transition: background 0.1s;
+  }
+  .tool-panel > summary::-webkit-details-marker { display: none; }
+  .tool-panel > summary:hover { background: oklch(55% 0.14 250 / 0.06); }
+  .tool-item-list { list-style: none; border-top: 1px solid var(--border); }
+  .tool-item {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 5px 14px 5px 12px;
+    border-bottom: 1px solid oklch(18% 0.012 260 / 0.04);
+  }
+  .tool-item .ti-status { flex-shrink: 0; width: 14px; text-align: center; margin-top: 1px; }
+  .tool-item.running .ti-status { color: var(--accent); animation: pulse 1s infinite; }
+  .tool-item.done .ti-status { color: var(--green); }
+  .tool-item .ti-body { flex: 1; min-width: 0; }
+  .tool-item .ti-name { font-weight: 500; color: var(--fg); }
+  .ti-detail summary {
+    cursor: pointer; color: var(--muted); font-size: 10px;
+    margin-top: 3px; list-style: none; display: inline-flex; align-items: center; gap: 4px;
+  }
+  .ti-detail summary::-webkit-details-marker { display: none; }
+  .ti-detail summary::before { content: '▸ '; font-size: 9px; }
+  .ti-detail[open] summary::before { content: '▾ '; }
+  .ti-detail pre {
+    font-size: 10px; color: var(--muted); white-space: pre-wrap; word-break: break-all;
+    max-height: 120px; overflow-y: auto; margin-top: 4px;
+    background: oklch(18% 0.012 260 / 0.03); padding: 6px 8px;
+    border-radius: 4px;
+  }
+
+  /* ── Thinking block ── */
+  .msg-thinking {
+    padding: 8px 14px;
+    border-left: 2px solid var(--border);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .msg-thinking summary {
+    cursor: pointer; user-select: none; list-style: none;
+    color: var(--muted); font-style: italic; padding: 2px 0;
+    transition: color 0.15s;
+  }
+  .msg-thinking summary::-webkit-details-marker { display: none; }
+  .msg-thinking summary::before { content: '… '; }
+  .msg-thinking summary:hover { color: var(--fg); }
+  .msg-thinking[open] summary { margin-bottom: 6px; color: var(--fg); }
+  .think-body {
+    white-space: pre-wrap; word-break: break-word;
+    line-height: 1.6; font-style: italic;
+    max-height: 280px; overflow-y: auto;
+    font-size: 11px; color: var(--muted);
+  }
+
   /* ── Toast ── */
   .toast {
     position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%);
@@ -820,33 +924,6 @@
     chatArea.scrollTop = chatArea.scrollHeight;
   }
 
-  function addWorkflowSteps(steps) {
-    hideEmpty();
-    steps.forEach(function(s) {
-      const div = document.createElement('div');
-      div.className = 'workflow-step ' + s.status;
-      div.innerHTML = '<span class="ws-icon">' + (s.status === 'done' ? '✓' : s.status === 'running' ? '⟳' : '○') + '</span>' +
-        '<span class="ws-label">' + s.label + '</span>' +
-        (s.duration ? '<span class="ws-dur">' + s.duration + '</span>' : '');
-      chatArea.appendChild(div);
-    });
-    chatArea.scrollTop = chatArea.scrollHeight;
-  }
-
-  function addExecWindow(output, exitCode) {
-    hideEmpty();
-    const wrapper = document.createElement('div');
-    wrapper.className = 'exec-window';
-    wrapper.innerHTML =
-      '<div class="exec-window-header">' +
-        '<span>exec · bash</span>' +
-        '<span>exit: ' + (exitCode || 0) + '</span>' +
-      '</div>' +
-      '<div class="exec-window-body">' + escapeHtml(output) + '</div>';
-    chatArea.appendChild(wrapper);
-    chatArea.scrollTop = chatArea.scrollHeight;
-  }
-
   function escapeHtml(str) {
     return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
@@ -879,8 +956,11 @@
     var sid = await ensureSession();
     var assistantMsg = null;
     var fullText = '';
-    var currentToolName = '';
-    var steps = [];
+    var thinkingEl = null;
+    var thinkingText = '';
+    var toolPanel = null;
+    var toolCallCount = 0;
+    var currentToolItemId = null;
     isStreaming = true;
     chatInput.disabled = true;
 
@@ -908,10 +988,12 @@
         for (var i = 0; i < lines.length; i++) {
           var line = lines[i];
           if (line.startsWith('event: ')) {
-            eventType = line.slice(7);
+            eventType = line.slice(7).trim();
           } else if (line.startsWith('data: ') && eventType) {
-            var data = line.slice(6);
-            handleSSEEvent(eventType, data);
+            var rawData = line.slice(6);
+            var parsedData;
+            try { parsedData = JSON.parse(rawData); } catch(e) { parsedData = rawData; }
+            handleSSEEvent(eventType, parsedData);
             eventType = '';
           }
         }
@@ -920,60 +1002,108 @@
       addMsg('think', 'Error: ' + err.message);
     } finally {
       if (assistantMsg && fullText) {
-        assistantMsg.textContent = fullText;
+        assistantMsg.innerHTML = typeof marked !== 'undefined' ? marked.parse(fullText) : escapeHtml(fullText);
       }
+      if (thinkingEl) thinkingEl.open = false;
+      if (toolPanel) toolPanel.open = false;
       isStreaming = false;
       chatInput.disabled = false;
       chatInput.focus();
     }
 
+    function getToolPanel() {
+      if (!toolPanel) {
+        toolPanel = document.createElement('details');
+        toolPanel.className = 'tool-panel';
+        toolPanel.open = true;
+        toolPanel.innerHTML = '<summary><span class="tp-label">0 tool calls</span></summary><ul class="tool-item-list"></ul>';
+        chatArea.appendChild(toolPanel);
+        hideEmpty();
+      }
+      return toolPanel;
+    }
+
     function handleSSEEvent(type, data) {
       switch (type) {
-        case 'text':
-          fullText += data;
-          if (!assistantMsg) {
-            assistantMsg = addMsg('assistant', data);
-          } else {
-            assistantMsg.textContent = fullText;
+        case 'thinking':
+          if (!thinkingEl) {
+            thinkingEl = document.createElement('details');
+            thinkingEl.className = 'msg-thinking';
+            thinkingEl.open = true;
+            var sum = document.createElement('summary');
+            sum.textContent = 'Thinking';
+            var body = document.createElement('pre');
+            body.className = 'think-body';
+            thinkingEl.appendChild(sum);
+            thinkingEl.appendChild(body);
+            chatArea.appendChild(thinkingEl);
+            hideEmpty();
+          }
+          var cleaned = (typeof data === 'string' ? data : '').replace(/<\/?think>\n?/g, '');
+          if (cleaned) {
+            thinkingEl.querySelector('.think-body').textContent += cleaned;
           }
           break;
 
+        case 'text':
+          fullText += (typeof data === 'string' ? data : '');
+          if (!assistantMsg) {
+            assistantMsg = document.createElement('div');
+            assistantMsg.className = 'msg assistant';
+            chatArea.appendChild(assistantMsg);
+            hideEmpty();
+          }
+          assistantMsg.innerHTML = typeof marked !== 'undefined' ? marked.parse(fullText) : escapeHtml(fullText);
+          break;
+
         case 'tool_call':
-          try {
-            var tc = JSON.parse(data);
-            currentToolName = tc.name;
-            addMsg('tool', '[tool:' + tc.name + '] ' + JSON.stringify(tc.input).slice(0, 200));
-            steps.push({ status: 'running', label: tc.name, duration: '…' });
-            addWorkflowSteps(steps);
-          } catch(e) {}
+          if (data && data.name) {
+            var panel = getToolPanel();
+            var list = panel.querySelector('.tool-item-list');
+            toolCallCount++;
+            var idx = toolCallCount;
+            var itemId = 'tool-item-' + idx;
+            var item = document.createElement('li');
+            item.className = 'tool-item running';
+            item.id = itemId;
+            var argsStr = escapeHtml(JSON.stringify(data.input, null, 2).slice(0, 500));
+            item.innerHTML = '<span class="ti-status">⟳</span>' +
+              '<div class="ti-body"><span class="ti-name">' + escapeHtml(data.name) + '</span>' +
+              '<details class="ti-detail"><summary>args</summary><pre>' + argsStr + '</pre></details></div>';
+            list.appendChild(item);
+            currentToolItemId = itemId;
+            panel.querySelector('.tp-label').textContent = toolCallCount + ' tool call' + (toolCallCount > 1 ? 's' : '');
+          }
           break;
 
         case 'tool_result':
-          try {
-            var tr = JSON.parse(data);
-            if (currentToolName === 'bash' && tr.result) {
-              addExecWindow(tr.result, 0);
+          if (currentToolItemId) {
+            var item = document.getElementById(currentToolItemId);
+            if (item) {
+              item.classList.remove('running');
+              item.classList.add('done');
+              item.querySelector('.ti-status').textContent = '✓';
+              var resultStr = data && data.result ? String(data.result) : '';
+              if (resultStr) {
+                var detailBody = item.querySelector('.ti-body');
+                var resultDetail = document.createElement('details');
+                resultDetail.className = 'ti-detail';
+                resultDetail.innerHTML = '<summary>result</summary><pre>' + escapeHtml(resultStr.slice(0, 500)) + '</pre>';
+                detailBody.appendChild(resultDetail);
+              }
             }
-            // Mark last step as done
-            if (steps.length > 0) {
-              steps[steps.length - 1].status = 'done';
-              steps[steps.length - 1].duration = '✓';
-            }
-            currentToolName = '';
-          } catch(e) {}
+            currentToolItemId = null;
+          }
           break;
 
         case 'done':
-          try {
-            var done = JSON.parse(data);
-            if (done.usage) {
-              addMsg('think', 'Tokens: ' + done.usage.input_tokens + ' in / ' + done.usage.output_tokens + ' out');
-            }
-          } catch(e) {}
+          if (data && data.usage) {
+            addMsg('think', 'tokens: ' + data.usage.input_tokens + ' in / ' + data.usage.output_tokens + ' out');
+          }
           break;
 
         case 'error':
-          addMsg('think', '⚠ ' + data);
+          addMsg('think', '⚠ ' + (typeof data === 'string' ? data : JSON.stringify(data)));
           break;
       }
       chatArea.scrollTop = chatArea.scrollHeight;
